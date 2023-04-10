@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  DHCPWithDomainNameFlag:
+    Description: Flag to indicate whether the DHCP Option should include domain name values
+    AllowedValues:
+      - Yes
+      - No
+    Type: String
+    Default: No
+  DomainNameServers:
+    Description: List of domain name servers IP addresses
+    Type: CommaDelimitedList
+    Default: "10.0.0.2,10.0.0.3,10.0.0.4"
+  VPCId:
+    Description: VPC ID to attach the DHCP option set
+    Type: String
+    Default: "vpc-xxxxx"
+
+Conditions:
+  IsDHCPWithDomainName: !Equals 
+    - !Ref DHCPWithDomainNameFlag
+    - Yes
+  IsUsEast1Region: !Equals
+    - !Ref AWS::Region
+    - us-east-1
+
+Resources:
+  CustomDHCPOption:
+    Type: AWS::EC2::DHCPOptions
+    Properties: 
+      DomainName:
+        'Fn::If':
+          - IsDHCPWithDomainName
+          - 'Fn::If':
+              - IsUsEast1Region
+              - ec2.internal
+              - !Sub '${AWS::Region}.compute.internal'
+          - !Ref AWS::NoValue
+      DomainNameServers: !Ref DomainNameServers
+
+  CustomDHCPOptionAttachment:
+    Type: AWS::EC2::VPCDHCPOptionsAssociation
+    Properties: 
+      DhcpOptionsId: !GetAtt CustomDHCPOption.DhcpOptionsId
+      VpcId: !Ref VPCId
