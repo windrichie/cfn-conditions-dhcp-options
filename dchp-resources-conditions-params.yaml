@@ -38,6 +38,8 @@ Resources:
               - !Sub '${AWS::Region}.compute.internal'
           - !Ref AWS::NoValue
       DomainNameServers: !Ref DomainNameServers
+    # Metadata:
+    #   UpdatedAt: 10Apr2023
 
   CustomDHCPOptionAttachment:
     Type: AWS::EC2::VPCDHCPOptionsAssociation
